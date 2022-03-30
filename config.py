@@ -32,11 +32,7 @@ SQLALCHEMY_BINDS = {'default': DB_URI}
 
 # endregion
 
-COLLECTED_URL = "https://bitzlato.com/api/p2p/exchange/dsa/"
-MAX_OFFER_COUNT = 3
 IS_DEBUG = bool(strtobool(os.environ.get('IS_DEBUG', 'False')))
-
-COLLECTOR_CRON_SECONDS = int(os.environ.get('COLLECTOR_CRON_SECONDS', '300'))
 
 # region AUTH
 ACCOUNT_EMAIL = os.environ['ACCOUNT_EMAIL']

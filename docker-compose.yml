@@ -8,12 +8,11 @@ services:
     ports:
       - "18831:18832"
     environment:
-      - DB_NAME=${DB_NAME-offers_collector}
-      - DB_USER=${DB_USER-collector}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB-offers_collector}
+      - POSTGRES_USER=${POSTGRES_USER-collector}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - DB_PORT=${DB_PORT-5432}
       - DB_HOST=${DB_HOST-db}
-      - COLLECTOR_CRON_SECONDS=${COLLECTOR_CRON_SECONDS-300}
     env_file:
       - .env
   collector:
@@ -29,7 +28,6 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - DB_PORT=${DB_PORT-5432}
       - DB_HOST=${DB_HOST-db}
-      - COLLECTOR_CRON_SECONDS=${COLLECTOR_CRON_SECONDS-300}
       - ACCOUNT_EMAIL=${ACCOUNT_EMAIL-ssomov@bitzlato.com}
       - API_KEY_ID=${API_KEY_ID-1}
     env_file:

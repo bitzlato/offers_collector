@@ -1,7 +1,13 @@
+import logging
+
 from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.exc import IntegrityError
 
 from offers_collector import db
+
+
+logger = logging.getLogger(__file__)
 
 
 class PaymentMethod(db.Model):
@@ -54,3 +60,19 @@ class Offer(db.Model):
 
     def __repr__(self):
         return f"Offer(id={self.id!r}, offer_id={self.offer_id!r}, currency={self.currency!r}, cryptocurrency={self.cryptocurrency!r})"
+
+
+class Settings(db.Model):
+    __tablename__ = "setting"
+
+    conf_name = db.Column(db.String(150), nullable=False, unique=True, primary_key=True)
+    conf_value = db.Column(db.String, nullable=False)
+
+    @staticmethod
+    def set_configuration_default_value(name: str, value: str):
+        try:
+            db.session.add(Settings(conf_name=name, conf_value=value))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            logger.info(f"Key {name} already exists")

@@ -15,8 +15,7 @@ import requests
 from sqlalchemy import select
 
 from offers_collector.auth import BitzlatoAuthV1
-from offers_collector.database.models import db, Currency, Cryptocurrency, PaymentMethod, Offer
-
+from offers_collector.database.models import db, Currency, Cryptocurrency, PaymentMethod, Offer, Settings
 
 logger = logging.getLogger(__file__)
 
@@ -87,7 +86,8 @@ class Collector:
             self.collect_offers()
 
             logger.info(f"[{datetime.datetime.now()}] Finish collect data! [{time.time() - s0}]")
-            sleep_time = config.COLLECTOR_CRON_SECONDS - (datetime.datetime.now() - start).seconds
+            COLLECTOR_CRON_SECONDS = int(db.session.query(Settings).filter(Settings.conf_name=="COLLECTOR_CRON_SECONDS").one().conf_value)
+            sleep_time = COLLECTOR_CRON_SECONDS - (datetime.datetime.now() - start).seconds
             time.sleep(sleep_time if sleep_time > 0 else 0)
 
     async def fetch(self, url, session: ClientSession):
@@ -159,6 +159,7 @@ class Collector:
 
     def collect_offers(self):
         start_time = time.time()
+        MAX_OFFER_COUNT = int(db.session.query(Settings).filter(Settings.conf_name=="MAX_OFFER_COUNT").one().conf_value)
         logger.info(f"start collect offers")
 
         loop = asyncio.get_event_loop()
@@ -167,7 +168,7 @@ class Collector:
         loop.run_until_complete(future)
 
         results = future.result()
-        results = map(lambda x: x['data'], filter(lambda x: 0 < x['total'] <= config.MAX_OFFER_COUNT, results))
+        results = map(lambda x: x['data'], filter(lambda x: 0 < x['total'] <= MAX_OFFER_COUNT, results))
         offers = []
         for _offers in results:
             offers += _offers

@@ -2,6 +2,7 @@ from flask import render_template
 
 from .offers_report import OffersReportView
 from .offers import OfferView
+from .settings import SettingsView
 from offers_collector import appbuilder
 
 
@@ -18,4 +19,5 @@ def page_not_found(e):
 __all__ = [
     'OffersReportView',
     'OfferView',
+    'SettingsView',
 ]
