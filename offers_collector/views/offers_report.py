@@ -39,6 +39,7 @@ get_report_stmt = text(
                 of.offer_id
             order by count(of.owner) desc, pm.id
         ) user_offers
+        where user_offers.duration >= (:duration)
         group by
             user_offers.username,
             user_offers.payment_method,
@@ -60,8 +61,8 @@ class OffersReportView(BaseView):
         "day": 60 * 60 * 24
     }
 
-    def _get_report_data(self, start_dt, end_dt):
-        return db.engine.execute(get_report_stmt, start_date=start_dt, end_date=end_dt).all()
+    def _get_report_data(self, start_dt, end_dt, duration):
+        return db.engine.execute(get_report_stmt, start_date=start_dt, end_date=end_dt, duration=duration).all()
 
     @expose(url='/load-csv/', methods=("GET",))
     def send_report(self):
@@ -73,12 +74,12 @@ class OffersReportView(BaseView):
         start_dt = datetime.datetime.fromisoformat(start_dt) if start_dt is not None else end_dt - datetime.timedelta(
             days=1)
 
-        duration = int(request.args.get("duration", "28800"))
+        duration = datetime.timedelta(seconds=int(request.args.get("duration", "28800")))
 
-        result = self._get_report_data(start_dt, end_dt)
+        result = self._get_report_data(start_dt, end_dt, duration)
 
         CSV_HEADERS = ("username", "type", "payment_method_id", "payment_method", "currency", "cryptocurrency", "duration")
-        csv_data = list(map(lambda x: dict(zip(CSV_HEADERS, x)), filter(lambda x: x[6].seconds >= duration, result)))
+        csv_data = list(map(lambda x: dict(zip(CSV_HEADERS, x)), result))
         for data in csv_data:
             data['duration'] = data['duration'].seconds
         filename = f"offers_report.csv"
@@ -98,9 +99,11 @@ class OffersReportView(BaseView):
             end_dt = datetime.datetime.fromisoformat(request.form.get("end_dt"))
             duration = int(request.form.get("duration", duration))
 
-        result = self._get_report_data(start_dt, end_dt)
+        duration = datetime.timedelta(seconds=duration)
+
+        result = self._get_report_data(start_dt, end_dt, duration)
         CSV_HEADERS = ("username", "type", "payment_method_id", "payment_method", "currency", "cryptocurrency", "duration")
-        csv_data = list(map(lambda x: dict(zip(CSV_HEADERS, x)), filter(lambda x: x[6].seconds >= duration, result)))
+        csv_data = list(map(lambda x: dict(zip(CSV_HEADERS, x)), result))
 
         for data in csv_data:
             data['duration'] = data['duration'].seconds
@@ -110,7 +113,8 @@ class OffersReportView(BaseView):
             items=csv_data,
             start_dt=start_dt.isoformat(),
             end_dt=end_dt.isoformat(),
-            duration=duration
+            duration=duration.seconds,
+            count=len(csv_data)
         )
 
 
