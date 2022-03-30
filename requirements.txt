@@ -1,0 +1,14 @@
+requests~=2.27.1
+python-dotenv~=0.19.2
+Flask-SQLAlchemy
+flask~=2.0.3
+psycopg2-binary~=2.9.3
+python-jose~=3.3.0
+SQLAlchemy~=1.4.32
+Flask-AppBuilder
+aiohttp~=3.8.1
+
+click==8.0.4
+Jinja2==3.0.3
+MarkupSafe==2.1.1
+Werkzeug==2.0.0

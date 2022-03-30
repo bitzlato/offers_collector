@@ -1,0 +1,71 @@
+{% extends "appbuilder/base.html" %}
+{#% extends "layouts/base.html" %#}
+{% import 'appbuilder/general/lib.html' as lib %}
+
+
+{% block content %}
+{{ lib.panel_begin(title, "edit") }}
+
+Кол-во открытых пользователем ордеров за выбранный промежуток времени.
+<h2>Последние данные</h2>
+<div>
+    <style>
+        table {
+            width: 80%; /* Ширина таблицы */
+            border-spacing: 7px 11px; /* Расстояние между ячейками */
+        }
+
+        td {
+            padding: 5px; /* Поля вокруг текста */
+        }
+    </style>
+    <form method="post">
+        <div>
+            <p>
+                <input type="text" id="duration" name="duration" value={{duration}}>
+                <input type="datetime-local" id="start-dt" name="start_dt" value={{start_dt}} min="2022-03-27T00:00">
+                <input type="datetime-local" id="end-dt" name="end_dt" value={{end_dt}} min="2022-03-27T00:00">
+                <input style="color: #ffffff; background: #2c659f" type="submit">
+            </p>
+        </div>
+        <div>
+            <p>
+                <button>
+                    <a href="http://192.168.0.128:18832/offersreportview/load-csv/?duration={{duration}}&start_dt={{start_dt}}&end_dt={{end_dt}}">
+                        load report
+                    </a>
+                </button>
+            </p>
+        </div>
+        <table>
+            <tr>
+                <td><b>username</b></td>
+                <td><b>type</b></td>
+                <td><b>payment method id</b></td>
+                <td><b>payment method</b></td>
+                <td><b>currency</b></td>
+                <td><b>cryptocurrency</b></td>
+                <td><b>duration (sec)</b></td>
+                <td><b>link</b></td>
+            </tr>
+            {% for item in items %}
+            <tr>
+                {% for field in item.values() %}
+                <td> {{field}}</td>
+                {% endfor %}
+                <td>
+                    <a target="_blank" href="/offerview/list/?_flt_3_owner={{item['username']}}&_flt_0_paymethod_id={{item['payment_method_id']}}&_flt_3_cryptocurrency={{item['cryptocurrency']}}&_flt_1_collection_time={{start_dt}}&_flt_2_collection_time={{end_dt}}&_flt_3_type={{item['type']}}">link</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </form>
+</div>
+
+{{ lib.panel_end() }}
+<p></p><p></p><p></p>
+{% endblock %}
+
+{% block add_tail_js %}
+<script src="{{url_for('appbuilder.static',filename='js/ab_keep_tab.js')}}"></script>
+{% endblock %}
