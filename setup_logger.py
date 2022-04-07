@@ -2,7 +2,7 @@ import logging
 import pathlib
 from logging.handlers import RotatingFileHandler
 
-log_dir = pathlib.Path(__file__).parent.parent / 'logs'
+log_dir = pathlib.Path(__file__).parent / 'logs'
 log_maxBytes = 30 * 1024 * 1024
 log_backupCount = 3
 
@@ -13,7 +13,7 @@ if not log_dir.exists():
 def setup_logging(is_debug: bool = False):
     handlers = [
         logging.StreamHandler(),
-        RotatingFileHandler(log_dir / 'liquidator_bot.log', maxBytes=log_maxBytes, backupCount=log_backupCount),
+        # RotatingFileHandler(log_dir / 'liquidator_bot.log', maxBytes=log_maxBytes, backupCount=log_backupCount),
     ]
 
     logging.basicConfig(format='%(asctime)-15s %(threadName)s %(levelname)-8s %(message)s',
