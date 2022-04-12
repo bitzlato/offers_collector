@@ -4,6 +4,8 @@ services:
     build: .
     container_name: offers_collector_web
     restart: unless-stopped
+    volumes:
+      - .api_key.json:/home/app/.api_key.json
     command: python app.py
     ports:
       - "18831:18832"
@@ -20,7 +22,7 @@ services:
     container_name: offers_collector
     restart: unless-stopped
     volumes:
-      - .api_key.json:/app/.api_key.json
+      - .api_key.json:/home/app/.api_key.json
     command: python collector.py
     environment:
       - POSTGRES_DB=${POSTGRES_DB-offers_collector}
