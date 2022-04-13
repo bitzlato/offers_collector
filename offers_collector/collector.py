@@ -27,11 +27,15 @@ class Collector:
         url = config.BASE_API_PATH + '/p2p/public/refs/paymethods'
 
         try:
-            data = requests.get(url).json()
-            known_payment_methods = db.session.execute(select(PaymentMethod.id)).scalars().all()
-            payment_methods = list(map(lambda x: PaymentMethod(id=x['id'], name=x['description'], currency=x['currency']), filter(lambda x: x['id'] not in known_payment_methods, data)))
-            db.session.bulk_save_objects(payment_methods)
-            db.session.commit()
+            response = requests.get(url)
+            if response.ok:
+                data = response.json()
+                known_payment_methods = db.session.execute(select(PaymentMethod.id)).scalars().all()
+                payment_methods = list(map(lambda x: PaymentMethod(id=x['id'], name=x['description'], currency=x['currency']), filter(lambda x: x['id'] not in known_payment_methods, data)))
+                db.session.bulk_save_objects(payment_methods)
+                db.session.commit()
+            else:
+                logger.warning(f"failed request {url} with status {response.status_code}")
         except Exception as e:
             logger.error(f"failed fetch payment_methods by url {url}", exc_info=e)
             return
@@ -43,11 +47,15 @@ class Collector:
         url = config.BASE_API_PATH + '/p2p/public/refs/currencies'
 
         try:
-            data = requests.get(url).json()
-            known_currency_symbols = db.session.execute(select(Currency.code)).scalars().all()
-            currencies = list(map(lambda x: Currency(code=x['code'], name=x['name']), filter(lambda x: x['code'] not in known_currency_symbols, data)))
-            db.session.bulk_save_objects(currencies)
-            db.session.commit()
+            response = requests.get(url)
+            if response.ok:
+                data = response.json()
+                known_currency_symbols = db.session.execute(select(Currency.code)).scalars().all()
+                currencies = list(map(lambda x: Currency(code=x['code'], name=x['name']), filter(lambda x: x['code'] not in known_currency_symbols, data)))
+                db.session.bulk_save_objects(currencies)
+                db.session.commit()
+            else:
+                logger.warning(f"failed request {url} with status {response.status_code}")
         except Exception as e:
             logger.error(f"failed fetch currencies by url {url}", exc_info=e)
             return
@@ -59,11 +67,15 @@ class Collector:
         url = config.BASE_API_PATH + '/p2p/public/refs/cryptocurrencies'
 
         try:
-            data = requests.get(url).json()
-            known_cryptocurrency_symbols = db.session.execute(select(Cryptocurrency.code)).scalars().all()
-            cryptocurrency = list(map(lambda x: Cryptocurrency(code=x['code'], name=x['name']), filter(lambda x: x['code'] not in known_cryptocurrency_symbols, data)))
-            db.session.bulk_save_objects(cryptocurrency)
-            db.session.commit()
+            response = requests.get(url)
+            if response.ok:
+                data = response .json()
+                known_cryptocurrency_symbols = db.session.execute(select(Cryptocurrency.code)).scalars().all()
+                cryptocurrency = list(map(lambda x: Cryptocurrency(code=x['code'], name=x['name']), filter(lambda x: x['code'] not in known_cryptocurrency_symbols, data)))
+                db.session.bulk_save_objects(cryptocurrency)
+                db.session.commit()
+            else:
+                logger.warning(f"failed request {url} with status {response.status_code}")
         except Exception as e:
             logger.error(f"failed fetch cryptocurrency by url {url}", exc_info=e)
             return
