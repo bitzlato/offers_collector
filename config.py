@@ -29,15 +29,9 @@ DB_CONFIG = {
     }
 }
 SQLALCHEMY_BINDS = {'default': DB_URI}
+BASE_API_PATH = os.environ.get('BASE_API_PATH', 'https://bitzlato.com/api2')
 
 # endregion
 
 IS_DEBUG = bool(strtobool(os.environ.get('IS_DEBUG', 'False')))
-
-# region AUTH
-ACCOUNT_EMAIL = os.environ['ACCOUNT_EMAIL']
-API_KEY_ID = os.environ['API_KEY_ID']
-with open(BASE_DIR / '.api_key.json') as file:
-    API_KEY = json.load(file)
-# endregion
 

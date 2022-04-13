@@ -14,24 +14,20 @@ import requests
 
 from sqlalchemy import select
 
-from offers_collector.auth import BitzlatoAuthV1
 from offers_collector.database.models import db, Currency, Cryptocurrency, PaymentMethod, Offer, Settings
 
 logger = logging.getLogger(__file__)
 
 
 class Collector:
-    def __init__(self):
-        self.auth = BitzlatoAuthV1(key_=config.API_KEY, email=config.ACCOUNT_EMAIL, kid=config.API_KEY_ID)
-
     def collect_payment_methods(self):
         start_time = time.time()
         logger.info(f"start collect currencies")
 
-        url = 'https://bitzlato.com/api2/p2p/public/refs/paymethods'
+        url = config.BASE_API_PATH + '/p2p/public/refs/paymethods'
 
         try:
-            data = requests.get(url, headers=self.auth.get_headers()).json()
+            data = requests.get(url).json()
             known_payment_methods = db.session.execute(select(PaymentMethod.id)).scalars().all()
             payment_methods = list(map(lambda x: PaymentMethod(id=x['id'], name=x['description'], currency=x['currency']), filter(lambda x: x['id'] not in known_payment_methods, data)))
             db.session.bulk_save_objects(payment_methods)
@@ -44,10 +40,10 @@ class Collector:
     def collect_currencies(self):
         start_time = time.time()
         logger.info(f"start collect currencies")
-        url = 'https://bitzlato.com/api/p2p/public/refs/currencies'
+        url = config.BASE_API_PATH + '/p2p/public/refs/currencies'
 
         try:
-            data = requests.get(url, headers=self.auth.get_headers()).json()
+            data = requests.get(url).json()
             known_currency_symbols = db.session.execute(select(Currency.code)).scalars().all()
             currencies = list(map(lambda x: Currency(code=x['code'], name=x['name']), filter(lambda x: x['code'] not in known_currency_symbols, data)))
             db.session.bulk_save_objects(currencies)
@@ -60,10 +56,10 @@ class Collector:
     def collect_cryptocurrencies(self):
         start_time = time.time()
         logger.info(f"start collect cryptocurrencies")
-        url = 'https://bitzlato.com/api/p2p/public/refs/cryptocurrencies'
+        url = config.BASE_API_PATH + '/p2p/public/refs/cryptocurrencies'
 
         try:
-            data = requests.get(url, headers=self.auth.get_headers()).json()
+            data = requests.get(url).json()
             known_cryptocurrency_symbols = db.session.execute(select(Cryptocurrency.code)).scalars().all()
             cryptocurrency = list(map(lambda x: Cryptocurrency(code=x['code'], name=x['name']), filter(lambda x: x['code'] not in known_cryptocurrency_symbols, data)))
             db.session.bulk_save_objects(cryptocurrency)
@@ -92,7 +88,7 @@ class Collector:
 
     async def fetch(self, url, session: ClientSession):
         logger.debug(f"make request for url {url}")
-        async with session.get(url, headers=self.auth.get_headers()) as response:
+        async with session.get(url) as response:
             try:
                 if response.ok:
                     return await response.json()
@@ -109,7 +105,7 @@ class Collector:
 
     async def _collect_offers(self, limit, skip):
         sem = asyncio.Semaphore(1000)
-        url = 'https://bitzlato.com/api/p2p/exchange/dsa/?limit={limit}&skip={skip}&currency={currency}&cryptocurrency={cryptocurrency}&type={type}&paymethod={paymethod}'
+        url = config.BASE_API_PATH + '/p2p/public/exchange/dsa/?limit={limit}&skip={skip}&currency={currency}&cryptocurrency={cryptocurrency}&type={type}&paymethod={paymethod}'
 
         known_cryptocurrency_symbols = db.session.execute(select(Cryptocurrency.code)).scalars().all()
         known_payment_methods = db.session.execute(select(PaymentMethod.id, PaymentMethod.currency)).all()
