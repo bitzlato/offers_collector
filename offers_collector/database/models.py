@@ -1,8 +1,10 @@
 import logging
 
+from flask_appbuilder.models.decorators import renders
 from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import relationship
 
 from offers_collector import db
 
@@ -53,6 +55,7 @@ class Offer(db.Model):
     cryptocurrency = db.Column(db.String(12), db.ForeignKey('cryptocurrency.code'))
     available = db.Column(db.Boolean)
     paymethod_id = db.Column(db.Integer, db.ForeignKey('payment_method.id'))
+    paymethod = relationship("PaymentMethod")
     owner_last_activity = db.Column(db.BigInteger)
     is_owner_verificated = db.Column(db.Boolean)
     collection_time = db.Column(db.DateTime(timezone=True), server_default=func.now())

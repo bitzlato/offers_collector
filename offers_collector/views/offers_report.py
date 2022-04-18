@@ -7,7 +7,7 @@ from sqlalchemy import text
 
 import config
 from offers_collector import db, appbuilder
-
+from offers_collector.database.models import Settings
 
 get_report_stmt = text(
     """
@@ -18,7 +18,8 @@ get_report_stmt = text(
             user_offers.payment_method,
             user_offers.currency,
             user_offers.cryptocurrency,
-            sum(user_offers.duration)
+            sum(user_offers.duration) as durations,
+            sum(user_offers.offer_count) as offer_count
         from (
             select
                 of.owner as username,
@@ -27,7 +28,8 @@ get_report_stmt = text(
                 pm.currency,
                 of.cryptocurrency,
                 of.type,
-                max(of.collection_time::timestamp) - min(of.collection_time::timestamp) as duration
+                max(of.collection_time::timestamp) - min(of.collection_time::timestamp) as duration,
+                count(of.owner) as offer_count
             from offer of
             join payment_method pm on pm.id = of.paymethod_id
             where of.collection_time >= (:start_date) and of.collection_time < (:end_date)
@@ -39,7 +41,7 @@ get_report_stmt = text(
                 of.offer_id
             order by count(of.owner) desc, pm.id
         ) user_offers
-        where user_offers.duration >= (:duration)
+        where user_offers.duration >= (:duration) and user_offers.offer_count >= (:offer_count)
         group by
             user_offers.username,
             user_offers.payment_method,
@@ -61,8 +63,8 @@ class OffersReportView(BaseView):
         "day": 60 * 60 * 24
     }
 
-    def _get_report_data(self, start_dt, end_dt, duration):
-        return db.engine.execute(get_report_stmt, start_date=start_dt, end_date=end_dt, duration=duration).all()
+    def _get_report_data(self, start_dt, end_dt, duration, offer_count):
+        return db.engine.execute(get_report_stmt, start_date=start_dt, end_date=end_dt, duration=duration, offer_count=offer_count).all()
 
     @expose(url='/load-csv/', methods=("GET",))
     def send_report(self):
@@ -75,10 +77,11 @@ class OffersReportView(BaseView):
             days=1)
 
         duration = datetime.timedelta(seconds=int(request.args.get("duration", "28800")))
+        offer_count = int(request.args.get("offer_count", "96"))
 
-        result = self._get_report_data(start_dt, end_dt, duration)
+        result = self._get_report_data(start_dt, end_dt, duration, offer_count)
 
-        CSV_HEADERS = ("username", "type", "payment_method_id", "payment_method", "currency", "cryptocurrency", "duration")
+        CSV_HEADERS = ("username", "type", "payment_method_id", "payment_method", "currency", "cryptocurrency", "duration", "offer_count")
         csv_data = list(map(lambda x: dict(zip(CSV_HEADERS, x)), result))
         for data in csv_data:
             data['duration'] = data['duration'].seconds
@@ -94,15 +97,19 @@ class OffersReportView(BaseView):
         end_dt = datetime.datetime.now().replace(second=0, microsecond=0)
         start_dt = end_dt - datetime.timedelta(days=1)
         duration = 28800
+        COLLECTOR_CRON_SECONDS = int(db.session.query(Settings).filter(Settings.conf_name == "COLLECTOR_CRON_SECONDS").one().conf_value)
+        offer_count = int(duration / COLLECTOR_CRON_SECONDS)
         if request.method == 'POST':
             start_dt = datetime.datetime.fromisoformat(request.form.get("start_dt"))
             end_dt = datetime.datetime.fromisoformat(request.form.get("end_dt"))
             duration = int(request.form.get("duration", duration))
+            offer_count = int(duration / COLLECTOR_CRON_SECONDS)
+            offer_count = int(request.form.get("offer_count", offer_count))
 
         duration = datetime.timedelta(seconds=duration)
 
-        result = self._get_report_data(start_dt, end_dt, duration)
-        CSV_HEADERS = ("username", "type", "payment_method_id", "payment_method", "currency", "cryptocurrency", "duration")
+        result = self._get_report_data(start_dt, end_dt, duration, offer_count)
+        CSV_HEADERS = ("username", "type", "payment_method_id", "payment_method", "currency", "cryptocurrency", "duration", "offer_count")
         csv_data = list(map(lambda x: dict(zip(CSV_HEADERS, x)), result))
 
         for data in csv_data:
@@ -114,7 +121,8 @@ class OffersReportView(BaseView):
             start_dt=start_dt.isoformat(),
             end_dt=end_dt.isoformat(),
             duration=duration.seconds,
-            count=len(csv_data)
+            count=len(csv_data),
+            offer_count=offer_count
         )
 
 
