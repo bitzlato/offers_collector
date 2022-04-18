@@ -12,7 +12,7 @@ class OfferView(ModelView):
         'paymethod_id': 'paymethod id',
         'owner_last_activity': 'owner last activity',
         'is_owner_verificated': 'is owner verificated',
-        'collection_time': 'collection time'
+        'collection_time': 'collection time',
     }
     search_columns = ['offer_id', 'type', 'owner', 'currency', 'cryptocurrency', 'paymethod_id', 'collection_time']
     list_columns = [
@@ -24,6 +24,7 @@ class OfferView(ModelView):
         'cryptocurrency',
         'available',
         'paymethod_id',
+        'paymethod.name',
         'owner_last_activity',
         'is_owner_verificated',
         'collection_time',

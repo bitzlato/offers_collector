@@ -23,6 +23,7 @@
         <div>
             <p>
                 <input type="text" id="duration" name="duration" value={{duration}}>
+                <input type="text" id="offer_count" name="offer_count" value={{offer_count}}>
                 <input type="datetime-local" id="start-dt" name="start_dt" value={{start_dt}} min="2022-03-27T00:00">
                 <input type="datetime-local" id="end-dt" name="end_dt" value={{end_dt}} min="2022-03-27T00:00">
                 <input style="color: #ffffff; background: #2c659f" type="submit">
@@ -31,7 +32,7 @@
         <div>
             <p>
                 <button>
-                    <a href="http://192.168.0.128:18832/offersreportview/load-csv/?duration={{duration}}&start_dt={{start_dt}}&end_dt={{end_dt}}">
+                    <a href="/offersreportview/load-csv/?duration={{duration}}&start_dt={{start_dt}}&end_dt={{end_dt}}&offer_count={{offer_count}}">
                         load report
                     </a>
                 </button>
@@ -49,6 +50,7 @@
                 <td><b>currency</b></td>
                 <td><b>cryptocurrency</b></td>
                 <td><b>duration (sec)</b></td>
+                <td><b>offer count</b></td>
                 <td><b>link</b></td>
             </tr>
             {% for item in items %}
